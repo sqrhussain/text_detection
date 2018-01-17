@@ -8,19 +8,23 @@
 function dedectText2(origImage)
 
 % Turn RGB image to grayscale 
-%origImage = '../data/collected/2.jpeg';
 colorImage = imread(origImage);
-I = rgb2gray(colorImage);
+I = im2double(rgb2gray(colorImage));
 % Smooth with Gaussian
+smooth = imgaussfilt(I,2);
 % Take the gradient of the image
-f1 = [-1 -1 -1; 2 2 2; -1 -1 -1];
-f2 = f1';
-fim1 = (imfilter(I,f1));
-fim2 = (imfilter(I,f2));
-g = (fim1 + fim2) * 0.5;
+%g = imgradient(smooth);
 
-
+sigma = 1;
+width = 100;
+lap = -1 * fspecial('log',[1,width],sigma);
+filter = repmat(lap,[1,1]);
+fim1 = imfilter(smooth,filter,'replicate');
+fim2 = imfilter(smooth,filter','replicate');
+g = (fim1+fim2)*.5;
+g = imadjust(g);
 % Normalize and Binarize
+%g = g/max(g(:));
 mask = im2bw(g,graythresh(g));
 
 
@@ -29,12 +33,12 @@ imshow(I);
 title('grayscale');
 subplot(2,2,2);
 imshow(g);
-title('DoG');
+title('Lines');
 subplot(2,2,3);
 imshow(mask);
 title('Mask before filtering');
 % Remove small features
-mask = bwareaopen(mask,50);
+% mask = bwareaopen(mask,50);
 
 
 % Measure image properties
@@ -59,6 +63,8 @@ for i=1:length(orientations)
     k=k+1;
 end
 
+mask = imfilter(im2double(mask),fspecial('average',[3,25]));
+mask = im2bw(mask,graythresh(mask));
 % Fill holes in imgae
 mask = imfill(mask,'holes'); 
 
@@ -77,7 +83,7 @@ for i=1:length(regionAreas)
     height = box(4);
     orientation = abs(orientations(i));
     if height > 3*width     % Remove vertical features
-       mask(regions{i})=0;
+       %mask(regions{i})=0;
     elseif orientation > 10
         mask(regions{i})=0; % Remove features with orientation > 10° respect to x-axis
     end
@@ -86,17 +92,20 @@ end
 
 % Remove small features
 %mask = bwareaopen(mask,round(medianArea/2));
-mask = bwmorph(mask,'open',Inf);
+%mask = bwmorph(mask,'open',Inf);
 % Bounding boxes for text regions
 mask = bwmorph(mask, 'close', Inf);
 boundingBoxes = regionprops(mask,'BoundingBox');
 
-
-% Show original image with bounding boxes indicating regions of text
-
 subplot(2,2,4);
 imshow(mask);
 title('Mask after filtering');
+
+% Show original image with bounding boxes indicating regions of text
+
+% subplot(2,2,4);
+% imshow(mask);
+% title('Mask after filtering');
 
 figure;
 imshow(colorImage);

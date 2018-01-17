@@ -6,7 +6,7 @@ negpath = '../data/training/neg/';
 files = dir(negpath);
 files = files(3:end);
 N = length(files);
-X = zeros(7,N);
+X = zeros(8,N);
 t = zeros(1,N);
 
 
