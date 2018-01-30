@@ -15,7 +15,6 @@ stdthresh = 10;
 smallmin = 5;
 smallmax = 10;
 im = rgb2gray(I);
-%im = imcrop(im);
 lap = sign * fspecial('log',[1,width],sigma);
 filter = repmat(lap,[1,1]);
 fim1 = imfilter(im,filter,'replicate');
